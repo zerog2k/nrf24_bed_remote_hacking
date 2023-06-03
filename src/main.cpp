@@ -37,6 +37,9 @@
 #define   MT_PAIR_INIT  0x04
 #define   MT_PAIR_DONE  0x05
 
+// don't ack packets, just eavesdrop
+//#define LISTEN_ONLY_MODE 1 
+
 // Set up nRF24L01 radio on SPI bus plus pins 7 & 8
 RF24 radio(7,8);
 
@@ -52,8 +55,12 @@ uint8_t pairing_ctr;
 uint8_t chan = 1; // initial listen channel
 
 const uint8_t addresses[][5] = {
+  {0x90, 0x69, 0x96, 0x69, 0x96},
+  {0x91, 0x69, 0x96, 0x69, 0x96},
+  {0x92, 0x69, 0x96, 0x69, 0x96},
+  {0x93, 0x69, 0x96, 0x69, 0x96},
   {0x94, 0x69, 0x96, 0x69, 0x96},
-  {0x95, 0x69, 0x96, 0x69, 0x96},
+  {0x95, 0x69, 0x96, 0x69, 0x96},     
   }; 
 
 //
@@ -68,14 +75,23 @@ void setup(void)
   // Setup and configure nrf24 radio
 
   radio.begin();
-  radio.setAutoAck(true); // default
-  radio.setCRCLength(RF24_CRC_16); // default
   radio.setDataRate(RF24_1MBPS);
+  
+  #ifdef LISTEN_ONLY_MODE
+  radio.setAutoAck(false);
+  #else
+  radio.setAutoAck(true);
+  #endif
+  radio.setCRCLength(RF24_CRC_16);
   radio.enableDynamicPayloads(); // this might need to be flipped for clone radios?
-
   radio.stopListening();
   radio.openReadingPipe(0, addresses[0]);
   radio.openReadingPipe(1, addresses[1]);
+  radio.openReadingPipe(2, addresses[2]);
+  radio.openReadingPipe(3, addresses[3]);
+  radio.openReadingPipe(4, addresses[4]);
+  radio.openReadingPipe(5, addresses[5]);  
+
   radio.setChannel(chan);
   radio.setPALevel(RF24_PA_LOW);
   radio.startListening();
@@ -132,7 +148,7 @@ void loop(void)
       else if (msgtype == MT_PAIR_DONE && pairing_started && pairing_ctr == msgcounter) 
       {
         // change pipe addr & chan
-        radio.openReadingPipe(1, newpipe);
+        radio.openReadingPipe(0, newpipe);
         radio.setChannel(chan);
         printf("switched to chan: %02d, rxpipe: ", chan);
         for (uint8_t i=0; i < sizeof(newpipe); i++) {
