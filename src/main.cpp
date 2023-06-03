@@ -1,6 +1,8 @@
 /*
   okin/jldk bed remote receiver sketch
   for arduino & nRF24L01
+  copyright Jens Jensen 2023
+  MIT LICENSE
 
   waits for pairing request from remote
   then listens on address and channel requested by remote

@@ -35,7 +35,7 @@ pairing light flashes while searching, is steady while going through pairing seq
 then will turn off when pairing is completed. 
 
 ## buttons
-mystery: on some remotes these seem to have two-way feedback, e.g. fan & vibrator buttons cycle through modes/levels, and an indicator lights up and cycles on the remote as well (at least when using a real base receiver). I suspect there is either some ack payload, or perhaps some response on a nearby pipe (base address) a real base receiver listens on.
+mystery: on some remotes these seem to have two-way feedback, e.g. fan & vibrator buttons cycle through modes/levels, and an indicator lights up and cycles on the remote as well (at least when using a real base receiver). I suspect there is either some ack payload, or perhaps some response on a nearby pipe (base address) a real base receiver transmits on to update remote about bed's state.
 
 ## disclaimer
 Use at your own risk. I take no responsibility for this code, which is provided as-is, and for research purposes only.
