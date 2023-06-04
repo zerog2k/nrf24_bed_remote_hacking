@@ -52,7 +52,8 @@
 #define   K_SNORE      0x80
 #define   K_HEAD_VIBRATE 0x08
 #define   K_FOOT_VIBRATE 0x04
-#define   REMOTE_WAKE    0x01   // is remote asking for status update?
+// some remotes send this REMOTE_WOKE_UP bit, but some bases interpret it as a vibrate command
+#define   REMOTE_WOKE_UP 0x01   // is remote asking for status update?
 #define   FAN_STATUS    0x02    // is remote asking for fan status?
 
 // msgbuf[3]
@@ -249,7 +250,8 @@ void loop(void)
         buf[6] = 0; 
         // Send a dummy message. If ack'ed we know
         // we are on the channel where base is listening
-        if (radio.write(buf, 7))
+        // some bases want to see multiple requests
+        if (radio.write(buf, 7) && radio.write(buf, 7))
         {
           // msg header
           buf[0] = 0x07; // msg body size
@@ -264,8 +266,8 @@ void loop(void)
           buf[8] = pipeaddr[3];
           buf[9] = pipeaddr[4];
           printf("send pair init. ");
-          // base likes it sent twice?
-          if (radio.write(buf, 10) && radio.write(buf, 10))
+          // bases likes it sent multiple times ?
+          if (radio.write(buf, 10) && radio.write(buf, 10) && radio.write(buf, 10))
           {
             // msg header
             buf[0] = 0x01; // msg body size
@@ -274,7 +276,8 @@ void loop(void)
             // msg body
             buf[3] = 1; // success?         
             printf("send pair done. ");
-            if (radio.write(buf, 4))
+            // some bases like it multiple times ?
+            if (radio.write(buf, 4) && radio.write(buf, 4))
             {
               printf("ack'd successfully.\n");
               base_pair_done = true;
