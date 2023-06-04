@@ -21,21 +21,45 @@
 #include "RF24.h"
 #include "printf.h"
 
-//
-// Hardware configuration
-//
-
 // bed remote stuff
-/// message format
+/// message header bytes
 // 0: message body size
 // 1: message counter
 // 2: message type?
-// 3: message body 
+// 3+: message body
 
 // known message types
-#define   MT_NORMAL     0x03
-#define   MT_PAIR_INIT  0x04
-#define   MT_PAIR_DONE  0x05
+#define   MT_NORMAL       0x03
+#define   MT_PAIR_INIT    0x04
+#define   MT_PAIR_DONE    0x05
+#define   MT_BASE_STATUS  0x06
+
+// known remote button masks, msgtype: 3
+// msgbuf[0]
+#define   K_FAN_RIGHT  0x40
+#define   K_VIBRATE    0x04
+#define   K_FLAT       0x08
+
+// msgbuf[1]
+#define   K_FAN_LEFT   0x40
+#define   K_STAR       0x01
+#define   K_LAMP       0x02
+#define   K_SYNC       0x04
+
+// msgbuf[2]
+#define   K_ZEROG      0x10
+#define   K_TV         0x40
+#define   K_SNORE      0x80
+#define   K_HEAD_VIBRATE 0x08
+#define   K_FOOT_VIBRATE 0x04
+#define   REMOTE_WAKE    0x01   // is remote asking for status update?
+#define   FAN_STATUS    0x02    // is remote asking for fan status?
+
+// msgbuf[3]
+#define   K_HEAD_UP    0x01
+#define   K_HEAD_DOWN  0x02
+#define   K_FEET_UP    0x04
+#define   K_FEET_DOWN  0x08
 
 /*
  in listen only mode, we need to emulate a base
@@ -46,7 +70,7 @@
 
  with listen_mode = false, we just emulate a base to pair with a remote
 */
-bool listen_mode = false;
+const bool listen_mode = false;
 
 #define MAX_CHANNELS  82
 
@@ -134,8 +158,13 @@ void loop(void)
 
     if (msgtype == MT_NORMAL) {
       // send ack payload in response, e.g. to change remote lights
-      //uint8_t rbuf[7] = {0x04, 1, 0x03, 0x00, 0x00, 0x03, 0x00};
-      //radio.writeAckPayload(1, &rbuf, sizeof(rbuf));
+      if (msgbuf[0] & 0x04 && ! listen_mode)
+      {
+        radio.enableAckPayload();
+        // msg body status bytes: [ fan_left, fan_right, ?, ?, vibrate, ?, ?, ? ]
+        uint8_t rbuf[] = {0x08, 0, MT_BASE_STATUS, 2, 3, 0, 0, 1, 0, 0, 0};
+        radio.writeAckPayload(1, &rbuf, sizeof(rbuf));
+      }
     }
     else if (msgtype == MT_PAIR_INIT) 
     {
